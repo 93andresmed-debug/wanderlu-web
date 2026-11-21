@@ -15,8 +15,6 @@
       display: flex;
       flex-direction: column;
     }
-
-    /* Barra superior */
     header {
       width: 100%;
       max-width: 1180px;
@@ -49,8 +47,6 @@
       background: #22d3ee;
       color: #090e17;
     }
-
-    /* Contenedor principal en 2 columnas */
     main {
       width: 100%;
       max-width: 1180px;
@@ -61,8 +57,6 @@
       gap: 44px;
       align-items: center;
     }
-
-    /* Columna izquierda: Título + Imagen de la sala */
     .col-izquierda h1 {
       margin: 0 0 16px;
       font-size: 44px;
@@ -70,9 +64,7 @@
       font-weight: 800;
       color: #ffffff;
     }
-    .col-izquierda h1 span {
-      color: #22d3ee;
-    }
+    .col-izquierda h1 span { color: #22d3ee; }
     .col-izquierda p {
       margin: 0 0 26px;
       font-size: 17px;
@@ -93,8 +85,6 @@
       height: auto;
       object-fit: cover;
     }
-
-    /* Columna derecha: Formulario + Botones debajo */
     .col-derecha {
       display: flex;
       flex-direction: column;
@@ -147,11 +137,7 @@
       color: #64748b;
       margin-bottom: 14px;
     }
-    .campo {
-      margin-bottom: 14px;
-    }
-
-    /* Botones debajo del formulario */
+    .campo { margin-bottom: 14px; }
     .acciones-debajo {
       display: flex;
       flex-direction: column;
@@ -198,7 +184,6 @@
       border-color: #22d3ee;
       background: rgba(34, 211, 238, 0.08);
     }
-
     .msg {
       padding: 12px 14px;
       border-radius: 10px;
@@ -216,15 +201,9 @@
       border: 1px solid #ef4444;
       color: #fca5a5;
     }
-
     @media (max-width: 900px) {
-      main {
-        grid-template-columns: 1fr;
-        gap: 28px;
-      }
-      .col-izquierda h1 {
-        font-size: 34px;
-      }
+      main { grid-template-columns: 1fr; gap: 28px; }
+      .col-izquierda h1 { font-size: 34px; }
     }
   </style>
 </head>
@@ -235,19 +214,17 @@
   </header>
 
   <main>
-    <!-- Izquierda: Presentación e Imagen de la Sala -->
     <section class="col-izquierda">
       <h1>Conecta, baila y crea tu estilo en <span>Wanderlu</span></h1>
       <p>
         Un mundo social 3D donde personalizas tu avatar, estrenas pasos de baile en la pista y conversas en tiempo real con amigos.
       </p>
       <div class="marco-imagen">
-        <img src="sala.png" alt="Pista de baile en Wanderlu 3D" />
+        <img src="bavkground.png" alt="Pista de baile en Wanderlu 3D" />
       </div>
     </section>
 
-    <!-- Derecha: Formulario de registro y botones debajo -->
-    <section class="col-derecha">
+    <section class="col-derecha" id="registro">
       <div class="card-registro">
         <h2>Crea tu cuenta de Wanderlu</h2>
         <p class="sub">Guarda tu avatar, tu ropa y tu progreso en la nube</p>
@@ -257,13 +234,13 @@
           <input
             id="nickname"
             type="text"
-            placeholder="Ej: Andres93"
+            placeholder="Ej: Zorek_93"
             minlength="3"
-            maxlength="10"
-            pattern="[A-Za-z0-9]+"
+            maxlength="12"
+            pattern="[A-Za-z0-9._-]+"
             required
           />
-          <span class="ayuda">Máximo 10 caracteres. Solo letras y números (sin espacios ni símbolos).</span>
+          <span class="ayuda">De 3 a 12 caracteres. Letras, números, guiones (- _) y puntos (sin espacios).</span>
 
           <div class="campo">
             <label for="genero">Avatar inicial</label>
@@ -285,7 +262,6 @@
         </form>
       </div>
 
-      <!-- Botones Registrarse Gratis y Descargar PC debajo del formulario -->
       <div class="acciones-debajo">
         <button id="btnEnviar" type="submit" form="formRegistro" class="btn-principal">✨ Registrarse Gratis</button>
         <a id="btnDescargar" href="#descargar" class="btn-descargar">💻 Descargar PC</a>
@@ -328,8 +304,8 @@
       const email = document.getElementById("correo").value.trim();
       const password = document.getElementById("password").value;
 
-      if (!/^[A-Za-z0-9]{3,10}$/.test(nickname)) {
-        mostrarMensaje("El nickname debe tener entre 3 y 10 caracteres, solo letras y números (sin espacios ni símbolos).", true);
+      if (!/^[A-Za-z0-9._-]{3,12}$/.test(nickname)) {
+        mostrarMensaje("El nickname debe tener entre 3 y 12 caracteres (letras, números, punto o guion, sin espacios).", true);
         return;
       }
 
