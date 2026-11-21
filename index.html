@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wanderlu - Mundo Social 3D</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
     body {
@@ -229,7 +229,7 @@
         <h2>Crea tu cuenta de Wanderlu</h2>
         <p class="sub">Guarda tu avatar, tu ropa y tu progreso en la nube</p>
 
-        <form id="formRegistro">
+        <form id="formRegistro" onsubmit="return false;">
           <label for="nickname">Nickname (Nombre en el juego)</label>
           <input
             id="nickname"
@@ -237,7 +237,6 @@
             placeholder="Ej: -Zorek-"
             minlength="3"
             maxlength="12"
-            pattern="[A-Za-z0-9._-]+"
             required
           />
           <span class="ayuda">De 3 a 12 caracteres. Letras, números, guiones (- _) y puntos (sin espacios).</span>
@@ -263,7 +262,7 @@
       </div>
 
       <div class="acciones-debajo">
-        <button id="btnEnviar" type="submit" form="formRegistro" class="btn-principal">✨ Registrarse Gratis</button>
+        <button id="btnEnviar" type="button" class="btn-principal">✨ Registrarse Gratis</button>
         <a id="btnDescargar" href="#descargar" class="btn-descargar">💻 Descargar PC</a>
       </div>
 
@@ -274,9 +273,7 @@
   <script>
     const SUPABASE_URL = "https://bfqxybdtqdhtefkmqykn.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_nDXX0rypt-jyIvHzO8zjdA_6mocMwi9";
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const form = document.getElementById("formRegistro");
     const msg = document.getElementById("mensaje");
     const btn = document.getElementById("btnEnviar");
     const btnDescargar = document.getElementById("btnDescargar");
@@ -296,43 +293,81 @@
       mostrarMensaje("Próximamente estará disponible el instalador directo aquí. Por ahora abre Wanderlu en tu PC e inicia sesión con tu cuenta.", false);
     });
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
+    btn.addEventListener("click", async () => {
+      try {
+        if (!window.supabase) {
+          mostrarMensaje("No se pudo cargar la conexión con el servidor. Recarga la página (Ctrl + F5) e inténtalo de nuevo.", true);
+          return;
+        }
 
-      const nickname = document.getElementById("nickname").value.trim();
-      const genero = document.getElementById("genero").value;
-      const email = document.getElementById("correo").value.trim();
-      const password = document.getElementById("password").value;
+        const nickname = document.getElementById("nickname").value.trim();
+        const genero = document.getElementById("genero").value;
+        const email = document.getElementById("correo").value.trim();
+        const password = document.getElementById("password").value;
 
-      if (!/^[A-Za-z0-9._-]{3,12}$/.test(nickname)) {
-        mostrarMensaje("El nickname debe tener entre 3 y 12 caracteres (letras, números, punto o guion, sin espacios).", true);
-        return;
-      }
+        if (!/^[A-Za-z0-9._-]{3,12}$/.test(nickname)) {
+          mostrarMensaje("El nickname debe tener entre 3 y 12 caracteres (letras, números, punto o guion, sin espacios).", true);
+          return;
+        }
+        if (!email || !email.includes("@")) {
+          mostrarMensaje("Escribe un correo electrónico válido.", true);
+          return;
+        }
+        if (password.length < 6) {
+          mostrarMensaje("La contraseña debe tener al menos 6 caracteres.", true);
+          return;
+        }
 
-      btn.disabled = true;
-      btn.textContent = "Registrando...";
+        btn.disabled = true;
+        btn.textContent = "Registrando...";
+        mostrarMensaje("Procesando registro...", false);
 
-      const { data: existe } = await sb
-        .from("perfiles")
-        .select("nickname")
-        .ilike("nickname", nickname)
-        .maybeSingle();
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      if (existe) {
-        mostrarMensaje("Ese nickname ya está en uso. Elige otro.", true);
+        const { data: existe, error: errBusca } = await sb
+          .from("perfiles")
+          .select("nickname")
+          .ilike("nickname", nickname)
+          .maybeSingle();
+
+        if (errBusca) {
+          mostrarMensaje("Error verificando nickname: " + errBusca.message, true);
+          btn.disabled = false;
+          btn.textContent = "✨ Registrarse Gratis";
+          return;
+        }
+
+        if (existe) {
+          mostrarMensaje("Ese nickname ya está en uso. Elige otro.", true);
+          btn.disabled = false;
+          btn.textContent = "✨ Registrarse Gratis";
+          return;
+        }
+
+        const { data, error } = await sb.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: window.location.origin,
+            data: { nickname, genero }
+          }
+        });
+
+        if (error) {
+          mostrarMensaje("Error al registrar: " + error.message, true);
+        } else if (data && data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+          mostrarMensaje("Ese correo ya tiene una cuenta registrada. Revisa tu bandeja de entrada o inicia sesión en el juego.", true);
+        } else {
+          document.getElementById("formRegistro").reset();
+          mostrarMensaje("¡Registro enviado! Revisa tu correo (" + email + ") y haz clic en el botón de confirmación para activar tu cuenta.", false);
+        }
+      } catch (err) {
+        mostrarMensaje("Fallo inesperado: " + (err && err.message ? err.message : String(err)), true);
+      } finally {
         btn.disabled = false;
         btn.textContent = "✨ Registrarse Gratis";
-        return;
       }
-
-      const { error } = await sb.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: window.location.origin,
-          data: { nickname, genero }
-        }
-      });
-
-      if (error) {
-        mostrarMensaje("Error al registrar: " + error
+    });
+  </script>
+</body>
+</html>
